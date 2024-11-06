@@ -25,8 +25,8 @@ jobs:
           cd ./src/main/resources
           
           # application.properties 파일 생성
-          touch application.properties
-          
+#          touch application.properties
+          cat <<EOT > ./src/main/resources/application.properties
           # GitHub-Actions 에서 설정한 값을 application.properties 파일에 쓰기
           echo "spring.datasource.url=${{ secrets.DB_URL }}" >> application.properties
           echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> application.properties
