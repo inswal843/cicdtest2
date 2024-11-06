@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up JDK 17
@@ -22,45 +22,41 @@ jobs:
 
       - name: Create application.properties
         run: |
-#          cd ./src/main/resources
-          
-          # application.properties 파일 생성
-#          touch application.properties
           cat <<EOT > ./src/main/resources/application.properties
-          # GitHub-Actions 에서 설정한 값을 application.properties 파일에 쓰기
-          echo "spring.datasource.url=${{ secrets.DB_URL }}" >> application.properties
-          echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> application.properties
-          echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> application.properties
-          echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> application.properties
-          echo "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL57Dialect" >> application.properties
-          echo "spring.jpa.properties.hibernate.show_sql=true" >> application.properties
-          echo "spring.jpa.properties.hibernate.format_sql=true" >> application.properties
-          echo "spring.jpa.hibernate.ddl-auto=update" >> application.properties
-
+          spring.datasource.url=${{ secrets.DB_URL }}
+          spring.datasource.username=${{ secrets.DB_USERNAME }}
+          spring.datasource.password=${{ secrets.DB_PASSWORD }}
+          spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+          spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL57Dialect
+          spring.jpa.properties.hibernate.show_sql=true
+          spring.jpa.properties.hibernate.format_sql=true
+          spring.jpa.hibernate.ddl-auto=update
+          EOT
         shell: bash
-        
+
       - name: Build with Gradle
         run: |
           chmod +x gradlew 
           ./gradlew build
-          
-      ## 웹 이미지 빌드 및 도커허브에 push
-      - name: web docker build and push
+
+      - name: Docker build and push
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} . 
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
-      ## docker compose up
-      - name: executing remote ssh commands using password
+
+      - name: SSH and deploy with Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ubuntu
           key: ${{ secrets.KEY }}
           script: |
+            # 기존 컨테이너 정리 및 이미지 업데이트
             sudo docker rm -f $(sudo docker ps -aq)
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            
+            # Docker Compose 실행
             cd ~
-            sudo docker-compose up -d
+            sudo docker-compose up -d --build
             sudo docker image prune -f
-          
