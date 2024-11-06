@@ -32,7 +32,7 @@ jobs:
           echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> application.properties
           echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> application.properties
           echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> application.properties
-          echo "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect" >> application.properties
+          echo "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL57Dialect" >> application.properties
           echo "spring.jpa.properties.hibernate.show_sql=true" >> application.properties
           echo "spring.jpa.properties.hibernate.format_sql=true" >> application.properties
           echo "spring.jpa.hibernate.ddl-auto=update" >> application.properties
